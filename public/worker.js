@@ -13,6 +13,78 @@ self.onmessage = (e) => {
 			module: ts.ModuleKind.None,
 		});
 
+		// Generate Mermaid Diagram
+		try {
+			// @ts-expect-error
+			const sourceFile = ts.createSourceFile(
+				"temp.ts",
+				code,
+				// @ts-expect-error
+				ts.ScriptTarget.Latest,
+				true,
+			);
+			let mermaid = "classDiagram\n";
+			let hasDiagramContent = false;
+
+			const visit = (node) => {
+				// @ts-expect-error
+				if (ts.isClassDeclaration(node) && node.name) {
+					hasDiagramContent = true;
+					const className = node.name.text;
+					mermaid += `class ${className} {\n`;
+					node.members.forEach((member) => {
+						// @ts-expect-error
+						if (ts.isPropertyDeclaration(member) && member.name) {
+							// @ts-expect-error
+							const type = member.type ? member.type.getText(sourceFile) : "any";
+							mermaid += `    +${member.name.getText(sourceFile)} : ${type}\n`;
+						}
+						// @ts-expect-error
+						if (ts.isMethodDeclaration(member) && member.name) {
+							mermaid += `    +${member.name.getText(sourceFile)}()\n`;
+						}
+					});
+					mermaid += "}\n";
+				}
+				// @ts-expect-error
+				if (ts.isInterfaceDeclaration(node) && node.name) {
+					hasDiagramContent = true;
+					const interfaceName = node.name.text;
+					mermaid += `class ${interfaceName} {\n    <<interface>>\n`;
+					node.members.forEach((member) => {
+						// @ts-expect-error
+						if (ts.isPropertySignature(member) && member.name) {
+							// @ts-expect-error
+							const type = member.type ? member.type.getText(sourceFile) : "any";
+							mermaid += `    +${member.name.getText(sourceFile)} : ${type}\n`;
+						}
+						// @ts-expect-error
+						if (ts.isMethodSignature(member) && member.name) {
+							mermaid += `    +${member.name.getText(sourceFile)}()\n`;
+						}
+					});
+					mermaid += "}\n";
+				}
+				// @ts-expect-error
+				ts.forEachChild(node, visit);
+			};
+
+			visit(sourceFile);
+
+			if (hasDiagramContent) {
+				self.postMessage({ type: "mermaid", data: mermaid });
+			} else {
+				self.postMessage({ type: "mermaid", data: undefined });
+			}
+		} catch (diagramError) {
+			// Ignore diagram generation errors silently or log as warning
+			self.postMessage({
+				type: "log",
+				level: "warn",
+				data: `Diagram generation warning: ${diagramError.message}`,
+			});
+		}
+
 		// Capture logs
 		const captureLog =
 			(level) =>
@@ -32,7 +104,7 @@ self.onmessage = (e) => {
 			};
 
 		const customConsole = {
-			log: captureLog("info"),
+			log: captureLog("log"),
 			error: captureLog("error"),
 			warn: captureLog("warn"),
 			info: captureLog("info"),
