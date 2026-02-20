@@ -69,11 +69,11 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear, theme }) => {
 	const getLogStyles = (type: Log["type"]) => {
 		switch (type) {
 			case "error":
-				return "bg-red-100 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-900/50 dark:text-red-200";
+				return "bg-red-50 border-red-200 text-red-900 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200";
 			case "warn":
-				return "bg-yellow-100 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900/50 dark:text-yellow-200";
+				return "bg-yellow-50 border-yellow-200 text-yellow-900 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200";
 			case "info":
-				return "bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-900/50 dark:text-blue-200";
+				return "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
 			case "log":
 			default:
 				return "bg-bg-secondary border-border-color text-text-primary";
