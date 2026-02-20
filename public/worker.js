@@ -25,6 +25,7 @@ self.onmessage = (e) => {
 			);
 			let mermaid = "classDiagram\n";
 			let hasDiagramContent = false;
+			const relationships = [];
 
 			const visit = (node) => {
 				// @ts-expect-error
@@ -32,12 +33,58 @@ self.onmessage = (e) => {
 					hasDiagramContent = true;
 					const className = node.name.text;
 					mermaid += `class ${className} {\n`;
+
+					// Inheritance and Implementation
+					// @ts-expect-error
+					if (node.heritageClauses) {
+						// @ts-expect-error
+						node.heritageClauses.forEach((clause) => {
+							// @ts-expect-error
+							const isExtends = clause.token === ts.SyntaxKind.ExtendsKeyword;
+							// @ts-expect-error
+							clause.types.forEach((typeNode) => {
+								const targetName = typeNode.expression.getText(sourceFile);
+								if (isExtends) {
+									relationships.push(`${className} --|> ${targetName}`);
+								} else {
+									relationships.push(`${className} ..|> ${targetName}`);
+								}
+							});
+						});
+					}
+
 					node.members.forEach((member) => {
 						// @ts-expect-error
 						if (ts.isPropertyDeclaration(member) && member.name) {
 							// @ts-expect-error
 							const type = member.type ? member.type.getText(sourceFile) : "any";
 							mermaid += `    +${member.name.getText(sourceFile)} : ${type}\n`;
+
+							// Association: Check if property type is a TypeReference
+							// @ts-expect-error
+							if (member.type && ts.isTypeReferenceNode(member.type)) {
+								// @ts-expect-error
+								const typeName = member.type.typeName.getText(sourceFile);
+								// Basic primitive check to avoid cluttering diagram with string, number etc.
+								const primitives = [
+									"string",
+									"number",
+									"boolean",
+									"any",
+									"void",
+									"null",
+									"undefined",
+									"object",
+									"symbol",
+									"bigint",
+									"Date",
+									"Array",
+									"Promise",
+								];
+								if (!primitives.includes(typeName)) {
+									relationships.push(`${className} --> ${typeName}`);
+								}
+							}
 						}
 						// @ts-expect-error
 						if (ts.isMethodDeclaration(member) && member.name) {
@@ -51,12 +98,54 @@ self.onmessage = (e) => {
 					hasDiagramContent = true;
 					const interfaceName = node.name.text;
 					mermaid += `class ${interfaceName} {\n    <<interface>>\n`;
+
+					// Inheritance (Interfaces can extend interfaces)
+					// @ts-expect-error
+					if (node.heritageClauses) {
+						// @ts-expect-error
+						node.heritageClauses.forEach((clause) => {
+							// @ts-expect-error
+							if (clause.token === ts.SyntaxKind.ExtendsKeyword) {
+								// @ts-expect-error
+								clause.types.forEach((typeNode) => {
+									const targetName = typeNode.expression.getText(sourceFile);
+									relationships.push(`${interfaceName} --|> ${targetName}`);
+								});
+							}
+						});
+					}
+
 					node.members.forEach((member) => {
 						// @ts-expect-error
 						if (ts.isPropertySignature(member) && member.name) {
 							// @ts-expect-error
 							const type = member.type ? member.type.getText(sourceFile) : "any";
 							mermaid += `    +${member.name.getText(sourceFile)} : ${type}\n`;
+
+							// Association
+							// @ts-expect-error
+							if (member.type && ts.isTypeReferenceNode(member.type)) {
+								// @ts-expect-error
+								const typeName = member.type.typeName.getText(sourceFile);
+								const primitives = [
+									"string",
+									"number",
+									"boolean",
+									"any",
+									"void",
+									"null",
+									"undefined",
+									"object",
+									"symbol",
+									"bigint",
+									"Date",
+									"Array",
+									"Promise",
+								];
+								if (!primitives.includes(typeName)) {
+									relationships.push(`${interfaceName} --> ${typeName}`);
+								}
+							}
 						}
 						// @ts-expect-error
 						if (ts.isMethodSignature(member) && member.name) {
@@ -72,6 +161,9 @@ self.onmessage = (e) => {
 			visit(sourceFile);
 
 			if (hasDiagramContent) {
+				if (relationships.length > 0) {
+					mermaid += "\n" + relationships.join("\n") + "\n";
+				}
 				self.postMessage({ type: "mermaid", data: mermaid });
 			} else {
 				self.postMessage({ type: "mermaid", data: undefined });
@@ -108,6 +200,7 @@ self.onmessage = (e) => {
 			error: captureLog("error"),
 			warn: captureLog("warn"),
 			info: captureLog("info"),
+			table: captureLog("log"),
 		};
 
 		// Execute the code
