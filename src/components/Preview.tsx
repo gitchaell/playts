@@ -62,21 +62,21 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear, theme }) => {
 				return <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />;
 			case "log":
 			default:
-				return <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />;
+				return <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />;
 		}
 	};
 
 	const getLogStyles = (type: Log["type"]) => {
 		switch (type) {
 			case "error":
-				return "bg-red-100 border-red-400 text-red-900 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200";
+				return "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200";
 			case "warn":
-				return "bg-amber-100 border-amber-400 text-amber-900 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200";
+				return "bg-amber-50 border-amber-200 text-amber-800 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200";
 			case "info":
-				return "bg-blue-100 border-blue-400 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
+				return "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
 			case "log":
 			default:
-				return "bg-green-100 border-green-400 text-green-900 dark:bg-green-950/30 dark:border-green-900/50 dark:text-green-200";
+				return "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-200";
 		}
 	};
 
