@@ -57,26 +57,26 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear, theme }) => {
 			case "error":
 				return <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />;
 			case "warn":
-				return <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />;
+				return <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-yellow-400 shrink-0" />;
 			case "info":
 				return <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />;
 			case "log":
 			default:
-				return <CheckCircle className="w-4 h-4 text-text-secondary shrink-0" />;
+				return <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />;
 		}
 	};
 
 	const getLogStyles = (type: Log["type"]) => {
 		switch (type) {
 			case "error":
-				return "bg-red-50 border-red-200 text-red-900 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200";
+				return "bg-red-100 border-red-400 text-red-900 dark:bg-red-950/30 dark:border-red-900/50 dark:text-red-200";
 			case "warn":
-				return "bg-yellow-50 border-yellow-200 text-yellow-900 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200";
+				return "bg-amber-100 border-amber-400 text-amber-900 dark:bg-yellow-950/30 dark:border-yellow-900/50 dark:text-yellow-200";
 			case "info":
-				return "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
+				return "bg-blue-100 border-blue-400 text-blue-900 dark:bg-blue-950/30 dark:border-blue-900/50 dark:text-blue-200";
 			case "log":
 			default:
-				return "bg-bg-secondary border-border-color text-text-primary";
+				return "bg-green-100 border-green-400 text-green-900 dark:bg-green-950/30 dark:border-green-900/50 dark:text-green-200";
 		}
 	};
 
