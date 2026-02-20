@@ -55,11 +55,11 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear, theme }) => {
 	const getLogIcon = (type: Log["type"]) => {
 		switch (type) {
 			case "error":
-				return <XCircle className="w-4 h-4 text-red-400 shrink-0" />;
+				return <XCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0" />;
 			case "warn":
-				return <AlertTriangle className="w-4 h-4 text-yellow-400 shrink-0" />;
+				return <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 shrink-0" />;
 			case "info":
-				return <Info className="w-4 h-4 text-blue-400 shrink-0" />;
+				return <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />;
 			case "log":
 			default:
 				return <CheckCircle className="w-4 h-4 text-text-secondary shrink-0" />;
