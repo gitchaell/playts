@@ -1,10 +1,12 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
 import type React from "react";
+import { useEffect, useRef } from "react";
 import type { EditorSettings } from "./SettingsModal";
 
 interface EditorProps extends EditorSettings {
 	value: string;
 	onChange: (value: string | undefined) => void;
+	theme: "light" | "dark";
 }
 
 const Editor: React.FC<EditorProps> = ({
@@ -14,8 +16,13 @@ const Editor: React.FC<EditorProps> = ({
 	lineNumbers,
 	minimap,
 	wordWrap,
+	theme,
 }) => {
+	const monacoRef = useRef<any>(null);
+
 	const handleEditorDidMount: OnMount = (_editor, monaco) => {
+		monacoRef.current = monaco;
+
 		monaco.editor.defineTheme("github-dark", {
 			base: "vs-dark",
 			inherit: true,
@@ -41,15 +48,50 @@ const Editor: React.FC<EditorProps> = ({
 				"editor.inactiveSelectionBackground": "#58a6ff33",
 			},
 		});
-		monaco.editor.setTheme("github-dark");
+
+		monaco.editor.defineTheme("github-light", {
+			base: "vs",
+			inherit: true,
+			rules: [
+				{ token: "comment", foreground: "6a737d" },
+				{ token: "keyword", foreground: "d73a49" },
+				{ token: "string", foreground: "032f62" },
+				{ token: "number", foreground: "005cc5" },
+				{ token: "regexp", foreground: "032f62" },
+				{ token: "type", foreground: "005cc5" },
+				{ token: "class", foreground: "6f42c1" },
+				{ token: "function", foreground: "6f42c1" },
+				{ token: "variable", foreground: "005cc5" },
+				{ token: "operator", foreground: "005cc5" },
+			],
+			colors: {
+				"editor.background": "#ffffff",
+				"editor.foreground": "#24292f",
+				"editorCursor.foreground": "#24292f",
+				"editor.lineHighlightBackground": "#f6f8fa",
+				"editorLineNumber.foreground": "#1b1f234d",
+				"editor.selectionBackground": "#0366d625",
+				"editor.inactiveSelectionBackground": "#0366d625",
+			},
+		});
+
+		monaco.editor.setTheme(theme === "dark" ? "github-dark" : "github-light");
 	};
+
+	useEffect(() => {
+		if (monacoRef.current) {
+			monacoRef.current.editor.setTheme(
+				theme === "dark" ? "github-dark" : "github-light",
+			);
+		}
+	}, [theme]);
 
 	return (
 		<div className="h-full w-full">
 			<MonacoEditor
 				height="100%"
 				defaultLanguage="typescript"
-				theme="github-dark"
+				theme={theme === "dark" ? "github-dark" : "github-light"}
 				value={value}
 				onChange={onChange}
 				onMount={handleEditorDidMount}

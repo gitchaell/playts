@@ -13,20 +13,20 @@ interface PreviewProps {
 	logs: Log[];
 	diagram?: string;
 	onClear?: () => void;
+	theme: "light" | "dark";
 }
 
-const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
+const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear, theme }) => {
 	const mermaidRef = useRef<HTMLDivElement>(null);
 	const logsEndRef = useRef<HTMLDivElement>(null);
 	const [activeTab, setActiveTab] = useState<"console" | "diagram">("console");
 
-	// Auto-switch to diagram tab if a new diagram arrives and we are not explicitly viewing logs?
-	// Or maybe just show an indicator. For now, let's keep it manual to avoid annoyance.
-	// But if there is a diagram, we might want to highlight the tab.
-
 	useEffect(() => {
 		if (activeTab === "diagram" && diagram && mermaidRef.current) {
-			mermaid.initialize({ startOnLoad: false, theme: "dark" });
+			mermaid.initialize({
+				startOnLoad: false,
+				theme: theme === "dark" ? "dark" : "default",
+			});
 			const id = `mermaid-${Date.now()}`;
 			mermaid
 				.render(id, diagram)
@@ -43,7 +43,7 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 		} else if (activeTab === "diagram" && !diagram && mermaidRef.current) {
 			mermaidRef.current.innerHTML = "";
 		}
-	}, [diagram, activeTab]);
+	}, [diagram, activeTab, theme]);
 
 	// Auto-scroll to bottom of logs
 	useEffect(() => {
@@ -62,28 +62,28 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 				return <Info className="w-4 h-4 text-blue-400 shrink-0" />;
 			case "log":
 			default:
-				return <CheckCircle className="w-4 h-4 text-gray-400 shrink-0" />;
+				return <CheckCircle className="w-4 h-4 text-text-secondary shrink-0" />;
 		}
 	};
 
 	const getLogStyles = (type: Log["type"]) => {
 		switch (type) {
 			case "error":
-				return "bg-red-900/20 border-red-900/50 text-red-200";
+				return "bg-red-900/20 border-red-900/50 text-red-200 dark:text-red-200 text-red-800";
 			case "warn":
-				return "bg-yellow-900/20 border-yellow-900/50 text-yellow-200";
+				return "bg-yellow-900/20 border-yellow-900/50 text-yellow-200 dark:text-yellow-200 text-yellow-800";
 			case "info":
-				return "bg-blue-900/20 border-blue-900/50 text-blue-200";
+				return "bg-blue-900/20 border-blue-900/50 text-blue-200 dark:text-blue-200 text-blue-800";
 			case "log":
 			default:
-				return "bg-gray-800/40 border-gray-700/50 text-gray-300";
+				return "bg-bg-secondary border-border-color text-text-primary";
 		}
 	};
 
 	return (
-		<div className="h-full w-full flex flex-col bg-[#0d1117] text-gray-300 overflow-hidden md:border-l border-gray-800">
+		<div className="h-full w-full flex flex-col bg-bg-primary text-text-primary overflow-hidden md:border-l border-border-color">
 			{/* Header with Tabs */}
-			<div className="flex items-center justify-between px-4 bg-[#161b22] border-b border-gray-800 shrink-0 h-10">
+			<div className="flex items-center justify-between px-4 bg-bg-secondary border-b border-border-color shrink-0 h-10">
 				<div className="flex h-full space-x-4">
 					<button
 						type="button"
@@ -91,13 +91,13 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 						className={clsx(
 							"h-full text-xs font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2",
 							activeTab === "console"
-								? "border-orange-400 text-gray-100"
-								: "border-transparent text-gray-500 hover:text-gray-300",
+								? "border-accent-color text-text-header"
+								: "border-transparent text-text-secondary hover:text-text-primary",
 						)}
 					>
 						Console
 						{logs.length > 0 && (
-							<span className="bg-gray-700 text-gray-300 rounded-full px-1.5 py-0.5 text-[10px]">
+							<span className="bg-bg-primary text-text-primary border border-border-color rounded-full px-1.5 py-0.5 text-[10px]">
 								{logs.length}
 							</span>
 						)}
@@ -108,8 +108,8 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 						className={clsx(
 							"h-full text-xs font-bold uppercase tracking-wider border-b-2 transition-colors flex items-center gap-2",
 							activeTab === "diagram"
-								? "border-orange-400 text-gray-100"
-								: "border-transparent text-gray-500 hover:text-gray-300",
+								? "border-accent-color text-text-header"
+								: "border-transparent text-text-secondary hover:text-text-primary",
 						)}
 					>
 						Diagram
@@ -122,7 +122,7 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 				{activeTab === "console" && (
 					<button
 						type="button"
-						className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+						className="text-xs text-text-secondary hover:text-text-primary transition-colors"
 						onClick={onClear}
 					>
 						Clear
@@ -131,11 +131,11 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 			</div>
 
 			{/* Content Area */}
-			<div className="flex-1 overflow-auto bg-[#0d1117] relative">
+			<div className="flex-1 overflow-auto bg-bg-primary relative">
 				{activeTab === "console" && (
 					<div className="p-4 font-mono text-xs space-y-2 absolute inset-0 overflow-auto">
 						{logs.length === 0 && (
-							<div className="text-gray-600 italic text-center mt-10">
+							<div className="text-text-secondary italic text-center mt-10">
 								No output
 							</div>
 						)}
@@ -161,7 +161,7 @@ const Preview: React.FC<PreviewProps> = ({ logs, diagram, onClear }) => {
 				{activeTab === "diagram" && (
 					<div className="h-full w-full flex flex-col items-center justify-center p-4 overflow-auto">
 						{!diagram ? (
-							<div className="text-gray-600 italic text-center text-xs">
+							<div className="text-text-secondary italic text-center text-xs">
 								No diagram generated.
 								<br />
 								Define a class or interface to see a visualization.

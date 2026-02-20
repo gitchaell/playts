@@ -1,4 +1,4 @@
-import { Code, Link, Settings } from "lucide-react";
+import { Code, Settings, Sun, Moon, Share2 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -8,11 +8,40 @@ import Preview, { type Log } from "./Preview";
 import Sidebar from "./Sidebar";
 import SettingsModal, { type EditorSettings } from "./SettingsModal";
 import ShareModal from "./ShareModal";
+import NewFileModal from "./NewFileModal";
 
 const DEFAULT_CODE = `// Welcome to PlayTS!
 // A simple TypeScript playground.
 
 console.log("Hello, PlayTS!");
+
+// Interfaces
+interface User {
+  id: number;
+  name: string;
+  role: "admin" | "user";
+}
+
+// Classes
+class UserManager {
+  private users: User[] = [];
+
+  addUser(user: User) {
+    this.users.push(user);
+    console.log(\`User \${user.name} added.\`);
+  }
+
+  getUsers(): User[] {
+    return this.users;
+  }
+}
+
+// Usage
+const manager = new UserManager();
+manager.addUser({ id: 1, name: "Alice", role: "admin" });
+manager.addUser({ id: 2, name: "Bob", role: "user" });
+
+console.table(manager.getUsers());
 
 const add = (a: number, b: number) => a + b;
 console.log("1 + 2 =", add(1, 2));
@@ -40,7 +69,24 @@ const Playground: React.FC = () => {
 	// Modals state
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [isShareOpen, setIsShareOpen] = useState(false);
+	const [isNewFileOpen, setIsNewFileOpen] = useState(false);
 	const [shareUrl, setShareUrl] = useState("");
+
+	// Theme state
+	const [theme, setTheme] = useLocalStorage<"light" | "dark">("playts-theme", "dark");
+
+	// Layout state
+	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+	const [sidebarWidth, setSidebarWidth] = useState(250);
+	const [editorRatio, setEditorRatio] = useState(0.5);
+	const [isMobile, setIsMobile] = useState(false);
+
+	useEffect(() => {
+		const checkMobile = () => setIsMobile(window.innerWidth < 768);
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	}, []);
 
 	// Editor settings
 	const [editorSettings, setEditorSettings] = useLocalStorage<EditorSettings>(
@@ -62,23 +108,29 @@ const Playground: React.FC = () => {
 		if (hash) {
 			const decoded = decompress(hash);
 			if (decoded) {
-				// Backward compatibility: check if decoded is a string (old format) or JSON object (new format)
 				try {
 					const parsed = JSON.parse(decoded);
 					if (typeof parsed === 'object' && parsed !== null) {
 						setFiles(parsed);
 						setActiveFile(Object.keys(parsed)[0] || "main.ts");
 					} else {
-						// Fallback for old simple string format
 						setFiles({ "main.ts": decoded });
 					}
 				} catch {
-					// Fallback for old simple string format
 					setFiles({ "main.ts": decoded });
 				}
 			}
 		}
 	}, [setFiles]);
+
+	// Apply theme
+	useEffect(() => {
+		if (theme === "dark") {
+			document.documentElement.classList.add("dark");
+		} else {
+			document.documentElement.classList.remove("dark");
+		}
+	}, [theme]);
 
 	// Initialize worker
 	useEffect(() => {
@@ -142,12 +194,11 @@ const Playground: React.FC = () => {
 		setIsShareOpen(true);
 	};
 
-	const handleAddFile = () => {
-		const filename = prompt("Enter file name (e.g., utils.ts):");
-		if (filename && !files[filename]) {
+	const handleCreateFile = (filename: string) => {
+		if (!files[filename]) {
 			setFiles((prev) => ({ ...prev, [filename]: "" }));
 			setActiveFile(filename);
-		} else if (filename) {
+		} else {
 			alert("File already exists!");
 		}
 	};
@@ -167,29 +218,93 @@ const Playground: React.FC = () => {
 		}
 	};
 
+	const toggleTheme = () => {
+		setTheme(prev => prev === "dark" ? "light" : "dark");
+	};
+
+	// Drag Handlers
+	const handleSidebarResize = (e: React.MouseEvent) => {
+		if (isMobile) return;
+		e.preventDefault();
+		const startX = e.clientX;
+		const startWidth = sidebarWidth;
+
+		const handleMouseMove = (moveEvent: MouseEvent) => {
+			const newWidth = Math.max(150, Math.min(400, startWidth + (moveEvent.clientX - startX)));
+			setSidebarWidth(newWidth);
+		};
+
+		const handleMouseUp = () => {
+			document.removeEventListener("mousemove", handleMouseMove);
+			document.removeEventListener("mouseup", handleMouseUp);
+		};
+
+		document.addEventListener("mousemove", handleMouseMove);
+		document.addEventListener("mouseup", handleMouseUp);
+	};
+
+	const handleEditorResize = (e: React.MouseEvent) => {
+		e.preventDefault();
+		const container = e.currentTarget.parentElement;
+		if (!container) return;
+
+		const containerRect = container.getBoundingClientRect();
+		const isHorizontal = !isMobile;
+
+		const handleMouseMove = (moveEvent: MouseEvent) => {
+			let newRatio: number;
+			if (isHorizontal) {
+				const relativeX = moveEvent.clientX - containerRect.left;
+				newRatio = relativeX / containerRect.width;
+			} else {
+				const relativeY = moveEvent.clientY - containerRect.top;
+				newRatio = relativeY / containerRect.height;
+			}
+			setEditorRatio(Math.max(0.2, Math.min(0.8, newRatio)));
+		};
+
+		const handleMouseUp = () => {
+			document.removeEventListener("mousemove", handleMouseMove);
+			document.removeEventListener("mouseup", handleMouseUp);
+		};
+
+		document.addEventListener("mousemove", handleMouseMove);
+		document.addEventListener("mouseup", handleMouseUp);
+	};
+
+
 	return (
-		<div className="h-screen w-screen flex flex-col bg-[#0d1117] text-gray-300 font-sans overflow-hidden">
+		<div className="h-dvh w-screen flex flex-col bg-bg-primary text-text-primary font-sans overflow-hidden transition-colors duration-200">
 			{/* Header */}
-			<header className="h-12 border-b border-gray-800 flex items-center justify-between px-4 bg-[#161b22] shrink-0">
+			<header className="h-12 border-b border-border-color flex items-center justify-between px-4 bg-bg-secondary shrink-0 z-20">
 				<div className="flex items-center space-x-2">
-					<Code className="w-5 h-5 text-blue-500" />
-					<h1 className="font-bold text-sm tracking-wide text-gray-100">
+					<Code className="w-5 h-5 text-accent-color" />
+					<h1 className="font-bold text-sm tracking-wide text-text-header">
 						PlayTS
 					</h1>
 				</div>
 				<div className="flex items-center space-x-2">
 					<button
 						type="button"
-						onClick={handleShare}
-						className="flex items-center space-x-1 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-xs font-medium transition-colors border border-gray-600 shadow-sm"
+						onClick={toggleTheme}
+						className="p-1.5 text-text-secondary hover:text-text-primary transition-colors"
+						title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
 					>
-						<Link className="w-3 h-3" />
-						<span>Share</span>
+						{theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+					</button>
+					<div className="h-4 w-px bg-border-color mx-2" />
+					<button
+						type="button"
+						onClick={handleShare}
+						className="flex items-center space-x-1 px-3 py-1.5 bg-bg-primary hover:bg-bg-secondary text-text-primary rounded-md text-xs font-medium transition-colors border border-border-color shadow-sm"
+					>
+						<Share2 className="w-3 h-3" />
+						<span className="hidden sm:inline">Share</span>
 					</button>
 					<button
 						type="button"
 						onClick={() => setIsSettingsOpen(true)}
-						className="p-1.5 text-gray-400 hover:text-white transition-colors"
+						className="p-1.5 text-text-secondary hover:text-text-primary transition-colors"
 						title="Settings"
 					>
 						<Settings className="w-5 h-5" />
@@ -198,29 +313,57 @@ const Playground: React.FC = () => {
 			</header>
 
 			{/* Main Content */}
-			<div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+			<div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
 				{/* Sidebar */}
-				<Sidebar
-					files={files}
-					activeFile={activeFile}
-					onSelectFile={setActiveFile}
-					onAddFile={handleAddFile}
-					onDeleteFile={handleDeleteFile}
-				/>
+				<div
+					className="flex flex-col shrink-0 md:h-full transition-[width] duration-0 ease-linear"
+					style={{ width: isSidebarCollapsed ? 'auto' : (!isMobile ? sidebarWidth : '100%') }}
+				>
+					<Sidebar
+						files={files}
+						activeFile={activeFile}
+						onSelectFile={setActiveFile}
+						onAddFile={() => setIsNewFileOpen(true)}
+						onDeleteFile={handleDeleteFile}
+						isCollapsed={isSidebarCollapsed}
+						onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+					/>
+				</div>
+
+				{/* Sidebar Resizer (Desktop only) */}
+				{!isSidebarCollapsed && (
+					<div
+						className="hidden md:block w-1 hover:bg-accent-color cursor-col-resize z-10 hover:w-1.5 transition-all bg-transparent -ml-0.5"
+						onMouseDown={handleSidebarResize}
+					/>
+				)}
 
 				{/* Editor & Preview Container */}
-				<div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+				<div className="flex-1 flex flex-col md:flex-row overflow-hidden relative min-w-0">
 					{/* Editor */}
-					<div className="flex-1 h-1/2 md:h-full border-b md:border-b-0 md:border-r border-gray-800 bg-[#0d1117]">
+					<div
+						className="flex-col overflow-hidden bg-bg-primary h-1/2 md:h-full"
+						style={{ flex: !isMobile ? editorRatio : '1 1 50%' }}
+					>
 						<Editor
 							value={files[activeFile] || ""}
 							onChange={handleCodeChange}
+							theme={theme}
 							{...editorSettings}
 						/>
 					</div>
 
+					{/* Resizer */}
+					<div
+						className="h-1 md:h-auto md:w-1 bg-border-color hover:bg-accent-color cursor-row-resize md:cursor-col-resize z-10 transition-colors flex items-center justify-center shrink-0"
+						onMouseDown={handleEditorResize}
+					/>
+
 					{/* Preview */}
-					<div className="flex-1 h-1/2 md:h-full bg-[#0d1117] overflow-hidden">
+					<div
+						className="flex-col overflow-hidden bg-bg-primary min-w-0 h-1/2 md:h-full"
+						style={{ flex: !isMobile ? 1 - editorRatio : '1 1 50%' }}
+					>
 						<Preview
 							logs={logs}
 							diagram={diagram}
@@ -228,6 +371,7 @@ const Playground: React.FC = () => {
 								setLogs([]);
 								setDiagram(undefined);
 							}}
+							theme={theme}
 						/>
 					</div>
 				</div>
@@ -244,6 +388,11 @@ const Playground: React.FC = () => {
 				isOpen={isShareOpen}
 				onClose={() => setIsShareOpen(false)}
 				url={shareUrl}
+			/>
+			<NewFileModal
+				isOpen={isNewFileOpen}
+				onClose={() => setIsNewFileOpen(false)}
+				onCreate={handleCreateFile}
 			/>
 		</div>
 	);

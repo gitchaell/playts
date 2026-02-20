@@ -1,0 +1,21 @@
+
+> app@0.0.1 dev
+> astro dev
+
+10:11:06 [types] Generated 1ms
+10:11:06 [content] Syncing content
+10:11:06 [content] Synced content
+10:11:07 [vite] Re-optimizing dependencies because vite config has changed
+
+ astro  v5.17.3 ready in 361 ms
+
+┃ Local    http://localhost:4321/
+┃ Network  use --host to expose
+
+10:11:07 watching for file changes...
+10:12:43 [200] / 134ms
+10:13:15 [watch] verification_script.py
+10:13:15 [watch] verification_script.py
+10:13:27 [200] / 76ms
+10:14:56 [watch] verification_script.py
+10:14:56 [watch] verification_script.py
