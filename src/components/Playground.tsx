@@ -1,4 +1,4 @@
-import { Code, Settings, Sun, Moon, Share2 } from "lucide-react";
+import { Code, Settings, Sun, Moon, Share2, Folder, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -57,7 +57,7 @@ interface Files {
 
 const Playground: React.FC = () => {
 	// State for files
-	const [files, setFiles] = useLocalStorage<Files>("playts-files", {
+	const [files, setFiles] = useLocalStorage<Files>("playts-files-v2", {
 		"main.ts": DEFAULT_CODE,
 	});
 	const [activeFile, setActiveFile] = useState<string>("main.ts");
@@ -70,15 +70,16 @@ const Playground: React.FC = () => {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [isShareOpen, setIsShareOpen] = useState(false);
 	const [isNewFileOpen, setIsNewFileOpen] = useState(false);
+	const [isFilesOpen, setIsFilesOpen] = useState(false);
 	const [shareUrl, setShareUrl] = useState("");
 
 	// Theme state
 	const [theme, setTheme] = useLocalStorage<"light" | "dark">("playts-theme", "dark");
 
 	// Layout state
-	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-	const [sidebarWidth, setSidebarWidth] = useState(250);
-	const [editorRatio, setEditorRatio] = useState(0.5);
+	const [isSidebarCollapsed, setIsSidebarCollapsed] = useLocalStorage<boolean>("playts-layout-sidebar-collapsed", false);
+	const [sidebarWidth, setSidebarWidth] = useLocalStorage<number>("playts-layout-sidebar-width", 250);
+	const [editorRatio, setEditorRatio] = useLocalStorage<number>("playts-layout-editor-ratio", 0.5);
 	const [isMobile, setIsMobile] = useState(false);
 
 	useEffect(() => {
@@ -96,6 +97,7 @@ const Playground: React.FC = () => {
 			lineNumbers: true,
 			minimap: false,
 			wordWrap: false,
+			editorTheme: "auto",
 		},
 	);
 
@@ -278,6 +280,16 @@ const Playground: React.FC = () => {
 			{/* Header */}
 			<header className="h-12 border-b border-border-color flex items-center justify-between px-4 bg-bg-secondary shrink-0 z-20">
 				<div className="flex items-center space-x-2">
+					{isMobile && (
+						<button
+							type="button"
+							onClick={() => setIsFilesOpen(!isFilesOpen)}
+							className="p-1.5 -ml-2 mr-1 text-text-secondary hover:text-text-primary transition-colors"
+							title="Toggle Files"
+						>
+							{isFilesOpen ? <X className="w-5 h-5" /> : <Folder className="w-5 h-5" />}
+						</button>
+					)}
 					<Code className="w-5 h-5 text-accent-color" />
 					<h1 className="font-bold text-sm tracking-wide text-text-header">
 						PlayTS
@@ -314,28 +326,30 @@ const Playground: React.FC = () => {
 
 			{/* Main Content */}
 			<div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-				{/* Sidebar */}
-				<div
-					className="flex flex-col shrink-0 md:h-full transition-[width] duration-0 ease-linear"
-					style={{ width: isSidebarCollapsed ? 'auto' : (!isMobile ? sidebarWidth : '100%') }}
-				>
-					<Sidebar
-						files={files}
-						activeFile={activeFile}
-						onSelectFile={setActiveFile}
-						onAddFile={() => setIsNewFileOpen(true)}
-						onDeleteFile={handleDeleteFile}
-						isCollapsed={isSidebarCollapsed}
-						onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-					/>
-				</div>
-
-				{/* Sidebar Resizer (Desktop only) */}
-				{!isSidebarCollapsed && (
-					<div
-						className="hidden md:block w-1 hover:bg-accent-color cursor-col-resize z-10 hover:w-1.5 transition-all bg-transparent -ml-0.5"
-						onMouseDown={handleSidebarResize}
-					/>
+				{/* Sidebar (Desktop) */}
+				{!isMobile && (
+					<>
+						<div
+							className="flex flex-col shrink-0 h-full transition-[width] duration-0 ease-linear"
+							style={{ width: isSidebarCollapsed ? 'auto' : sidebarWidth }}
+						>
+							<Sidebar
+								files={files}
+								activeFile={activeFile}
+								onSelectFile={setActiveFile}
+								onAddFile={() => setIsNewFileOpen(true)}
+								onDeleteFile={handleDeleteFile}
+								isCollapsed={isSidebarCollapsed}
+								onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+							/>
+						</div>
+						{!isSidebarCollapsed && (
+							<div
+								className="w-1 hover:bg-accent-color cursor-col-resize z-10 hover:w-1.5 transition-all bg-transparent -ml-0.5"
+								onMouseDown={handleSidebarResize}
+							/>
+						)}
+					</>
 				)}
 
 				{/* Editor & Preview Container */}
@@ -348,7 +362,12 @@ const Playground: React.FC = () => {
 						<Editor
 							value={files[activeFile] || ""}
 							onChange={handleCodeChange}
-							theme={theme}
+							theme={
+								editorSettings.editorTheme === "dark" ||
+								editorSettings.editorTheme === "light"
+									? editorSettings.editorTheme
+									: theme
+							}
 							{...editorSettings}
 						/>
 					</div>
@@ -376,6 +395,33 @@ const Playground: React.FC = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Mobile Sidebar Overlay */}
+			{isMobile && isFilesOpen && (
+				<div
+					className="absolute inset-0 z-30 bg-black/50 backdrop-blur-sm"
+					onClick={() => setIsFilesOpen(false)}
+					onKeyDown={(e) => e.key === 'Escape' && setIsFilesOpen(false)}
+				>
+					<div
+						className="h-full w-64 shadow-xl flex flex-col"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<Sidebar
+							files={files}
+							activeFile={activeFile}
+							onSelectFile={(file) => {
+								setActiveFile(file);
+								setIsFilesOpen(false);
+							}}
+							onAddFile={() => setIsNewFileOpen(true)}
+							onDeleteFile={handleDeleteFile}
+							isCollapsed={false}
+							onToggle={() => {}}
+						/>
+					</div>
+				</div>
+			)}
 
 			{/* Modals */}
 			<SettingsModal

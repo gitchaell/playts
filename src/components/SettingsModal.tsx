@@ -6,6 +6,7 @@ export interface EditorSettings {
 	lineNumbers: boolean;
 	minimap: boolean;
 	wordWrap: boolean;
+	editorTheme: "auto" | "light" | "dark";
 }
 
 interface SettingsModalProps {
@@ -44,6 +45,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					</button>
 				</div>
 				<div className="p-4 space-y-4">
+					<div className="flex items-center justify-between">
+						<label htmlFor="editorTheme" className="text-sm text-text-primary">
+							Editor Theme
+						</label>
+						<select
+							id="editorTheme"
+							value={settings.editorTheme || "auto"}
+							onChange={(e) =>
+								handleChange(
+									"editorTheme",
+									e.target.value as "auto" | "light" | "dark",
+								)
+							}
+							className="bg-bg-primary text-text-primary text-sm border border-border-color rounded px-2 py-1 outline-none focus:border-accent-color"
+						>
+							<option value="auto">Auto (System)</option>
+							<option value="light">Light</option>
+							<option value="dark">Dark</option>
+						</select>
+					</div>
+
 					<div className="flex items-center justify-between">
 						<label htmlFor="fontSize" className="text-sm text-text-primary">
 							Font Size

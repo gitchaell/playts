@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 	return (
 		<div
 			className={`
-        bg-bg-primary border-b md:border-b-0 md:border-r border-border-color flex flex-col shrink-0 transition-all duration-300 relative h-48 md:h-full w-full
+        bg-bg-primary border-r border-border-color flex flex-col shrink-0 transition-all duration-300 relative h-full w-full
       `}
 		>
 			<div className={`p-4 border-b border-border-color flex items-center bg-bg-secondary h-12 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
