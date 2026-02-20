@@ -27,6 +27,41 @@ self.onmessage = (e) => {
 			let hasDiagramContent = false;
 			const relationships = [];
 
+			const getTypeName = (typeNode) => {
+				if (!typeNode) return null;
+				// @ts-expect-error
+				if (ts.isTypeReferenceNode(typeNode)) {
+					// @ts-expect-error
+					return typeNode.typeName.getText(sourceFile);
+				}
+				// @ts-expect-error
+				if (ts.isArrayTypeNode(typeNode)) {
+					return getTypeName(typeNode.elementType);
+				}
+				return null;
+			};
+
+			const addRelationship = (source, target) => {
+				const primitives = [
+					"string",
+					"number",
+					"boolean",
+					"any",
+					"void",
+					"null",
+					"undefined",
+					"object",
+					"symbol",
+					"bigint",
+					"Date",
+					"Array",
+					"Promise",
+				];
+				if (target && !primitives.includes(target)) {
+					relationships.push(`${source} --> ${target}`);
+				}
+			};
+
 			const visit = (node) => {
 				// @ts-expect-error
 				if (ts.isClassDeclaration(node) && node.name) {
@@ -60,35 +95,24 @@ self.onmessage = (e) => {
 							const type = member.type ? member.type.getText(sourceFile) : "any";
 							mermaid += `    +${member.name.getText(sourceFile)} : ${type}\n`;
 
-							// Association: Check if property type is a TypeReference
+							// Association
 							// @ts-expect-error
-							if (member.type && ts.isTypeReferenceNode(member.type)) {
-								// @ts-expect-error
-								const typeName = member.type.typeName.getText(sourceFile);
-								// Basic primitive check to avoid cluttering diagram with string, number etc.
-								const primitives = [
-									"string",
-									"number",
-									"boolean",
-									"any",
-									"void",
-									"null",
-									"undefined",
-									"object",
-									"symbol",
-									"bigint",
-									"Date",
-									"Array",
-									"Promise",
-								];
-								if (!primitives.includes(typeName)) {
-									relationships.push(`${className} --> ${typeName}`);
-								}
-							}
+							const typeName = getTypeName(member.type);
+							addRelationship(className, typeName);
 						}
 						// @ts-expect-error
 						if (ts.isMethodDeclaration(member) && member.name) {
 							mermaid += `    +${member.name.getText(sourceFile)}()\n`;
+							// @ts-expect-error
+							const returnType = getTypeName(member.type);
+							addRelationship(className, returnType);
+
+							// @ts-expect-error
+							member.parameters.forEach(param => {
+								// @ts-expect-error
+								const paramType = getTypeName(param.type);
+								addRelationship(className, paramType);
+							});
 						}
 					});
 					mermaid += "}\n";
@@ -124,32 +148,22 @@ self.onmessage = (e) => {
 
 							// Association
 							// @ts-expect-error
-							if (member.type && ts.isTypeReferenceNode(member.type)) {
-								// @ts-expect-error
-								const typeName = member.type.typeName.getText(sourceFile);
-								const primitives = [
-									"string",
-									"number",
-									"boolean",
-									"any",
-									"void",
-									"null",
-									"undefined",
-									"object",
-									"symbol",
-									"bigint",
-									"Date",
-									"Array",
-									"Promise",
-								];
-								if (!primitives.includes(typeName)) {
-									relationships.push(`${interfaceName} --> ${typeName}`);
-								}
-							}
+							const typeName = getTypeName(member.type);
+							addRelationship(interfaceName, typeName);
 						}
 						// @ts-expect-error
 						if (ts.isMethodSignature(member) && member.name) {
 							mermaid += `    +${member.name.getText(sourceFile)}()\n`;
+							// @ts-expect-error
+							const returnType = getTypeName(member.type);
+							addRelationship(interfaceName, returnType);
+
+							// @ts-expect-error
+							member.parameters.forEach(param => {
+								// @ts-expect-error
+								const paramType = getTypeName(param.type);
+								addRelationship(interfaceName, paramType);
+							});
 						}
 					});
 					mermaid += "}\n";

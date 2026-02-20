@@ -98,6 +98,7 @@ const Playground: React.FC = () => {
 			minimap: false,
 			wordWrap: false,
 			editorTheme: "auto",
+			fontFamily: "'JetBrains Mono', monospace",
 		},
 	);
 
@@ -357,14 +358,13 @@ const Playground: React.FC = () => {
 					{/* Editor */}
 					<div
 						className="flex-col overflow-hidden bg-bg-primary h-1/2 md:h-full"
-						style={{ flex: !isMobile ? editorRatio : '1 1 50%' }}
+						style={{ flex: editorRatio }}
 					>
 						<Editor
 							value={files[activeFile] || ""}
 							onChange={handleCodeChange}
 							theme={
-								editorSettings.editorTheme === "dark" ||
-								editorSettings.editorTheme === "light"
+								editorSettings.editorTheme !== "auto"
 									? editorSettings.editorTheme
 									: theme
 							}
@@ -381,7 +381,7 @@ const Playground: React.FC = () => {
 					{/* Preview */}
 					<div
 						className="flex-col overflow-hidden bg-bg-primary min-w-0 h-1/2 md:h-full"
-						style={{ flex: !isMobile ? 1 - editorRatio : '1 1 50%' }}
+						style={{ flex: 1 - editorRatio }}
 					>
 						<Preview
 							logs={logs}

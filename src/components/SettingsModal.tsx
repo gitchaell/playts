@@ -6,7 +6,8 @@ export interface EditorSettings {
 	lineNumbers: boolean;
 	minimap: boolean;
 	wordWrap: boolean;
-	editorTheme: "auto" | "light" | "dark";
+	editorTheme: "auto" | "light" | "dark" | "dracula" | "monokai" | "nord" | "solarized-dark" | "solarized-light";
+	fontFamily: string;
 }
 
 interface SettingsModalProps {
@@ -55,7 +56,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 							onChange={(e) =>
 								handleChange(
 									"editorTheme",
-									e.target.value as "auto" | "light" | "dark",
+									e.target.value as EditorSettings["editorTheme"],
 								)
 							}
 							className="bg-bg-primary text-text-primary text-sm border border-border-color rounded px-2 py-1 outline-none focus:border-accent-color"
@@ -63,6 +64,31 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 							<option value="auto">Auto (System)</option>
 							<option value="light">Light</option>
 							<option value="dark">Dark</option>
+							<option value="dracula">Dracula</option>
+							<option value="monokai">Monokai</option>
+							<option value="nord">Nord</option>
+							<option value="solarized-dark">Solarized Dark</option>
+							<option value="solarized-light">Solarized Light</option>
+						</select>
+					</div>
+
+					<div className="flex items-center justify-between">
+						<label htmlFor="fontFamily" className="text-sm text-text-primary">
+							Font Family
+						</label>
+						<select
+							id="fontFamily"
+							value={settings.fontFamily || "'JetBrains Mono', monospace"}
+							onChange={(e) => handleChange("fontFamily", e.target.value)}
+							className="bg-bg-primary text-text-primary text-sm border border-border-color rounded px-2 py-1 outline-none focus:border-accent-color w-40"
+						>
+							<option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+							<option value="'Fira Code', monospace">Fira Code</option>
+							<option value="'Source Code Pro', monospace">Source Code Pro</option>
+							<option value="'Roboto Mono', monospace">Roboto Mono</option>
+							<option value="'Ubuntu Mono', monospace">Ubuntu Mono</option>
+							<option value="Consolas, monospace">Consolas</option>
+							<option value="'Courier New', monospace">Courier New</option>
 						</select>
 					</div>
 
