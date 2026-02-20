@@ -32,20 +32,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 
 	return (
 		<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-			<div className="bg-[#161b22] border border-gray-700 rounded-lg shadow-xl w-96 overflow-hidden">
-				<div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-					<h2 className="text-sm font-bold text-gray-100">Editor Settings</h2>
+			<div className="bg-bg-secondary border border-border-color rounded-lg shadow-xl w-96 overflow-hidden">
+				<div className="flex items-center justify-between px-4 py-3 border-b border-border-color">
+					<h2 className="text-sm font-bold text-text-header">Editor Settings</h2>
 					<button
 						type="button"
 						onClick={onClose}
-						className="text-gray-400 hover:text-white transition-colors"
+						className="text-text-secondary hover:text-text-primary transition-colors"
 					>
 						<X className="w-4 h-4" />
 					</button>
 				</div>
 				<div className="p-4 space-y-4">
 					<div className="flex items-center justify-between">
-						<label htmlFor="fontSize" className="text-sm text-gray-300">
+						<label htmlFor="fontSize" className="text-sm text-text-primary">
 							Font Size
 						</label>
 						<div className="flex items-center space-x-2">
@@ -58,21 +58,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 								onChange={(e) =>
 									handleChange("fontSize", Number.parseInt(e.target.value))
 								}
-								className="w-24 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+								className="w-24 h-2 bg-bg-primary rounded-lg appearance-none cursor-pointer"
 							/>
-							<span className="text-xs text-gray-400 w-6 text-right">
+							<span className="text-xs text-text-secondary w-6 text-right">
 								{settings.fontSize}px
 							</span>
 						</div>
 					</div>
 
 					<div className="flex items-center justify-between">
-						<label className="text-sm text-gray-300">Line Numbers</label>
+						<label className="text-sm text-text-primary">Line Numbers</label>
 						<button
 							type="button"
 							onClick={() => handleChange("lineNumbers", !settings.lineNumbers)}
 							className={`w-10 h-5 rounded-full flex items-center p-1 transition-colors ${
-								settings.lineNumbers ? "bg-blue-600" : "bg-gray-700"
+								settings.lineNumbers ? "bg-blue-600" : "bg-bg-primary border border-border-color"
 							}`}
 						>
 							<div
@@ -84,12 +84,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					</div>
 
 					<div className="flex items-center justify-between">
-						<label className="text-sm text-gray-300">Minimap</label>
+						<label className="text-sm text-text-primary">Minimap</label>
 						<button
 							type="button"
 							onClick={() => handleChange("minimap", !settings.minimap)}
 							className={`w-10 h-5 rounded-full flex items-center p-1 transition-colors ${
-								settings.minimap ? "bg-blue-600" : "bg-gray-700"
+								settings.minimap ? "bg-blue-600" : "bg-bg-primary border border-border-color"
 							}`}
 						>
 							<div
@@ -101,12 +101,12 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 					</div>
 
 					<div className="flex items-center justify-between">
-						<label className="text-sm text-gray-300">Word Wrap</label>
+						<label className="text-sm text-text-primary">Word Wrap</label>
 						<button
 							type="button"
 							onClick={() => handleChange("wordWrap", !settings.wordWrap)}
 							className={`w-10 h-5 rounded-full flex items-center p-1 transition-colors ${
-								settings.wordWrap ? "bg-blue-600" : "bg-gray-700"
+								settings.wordWrap ? "bg-blue-600" : "bg-bg-primary border border-border-color"
 							}`}
 						>
 							<div
@@ -117,11 +117,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 						</button>
 					</div>
 				</div>
-				<div className="px-4 py-3 bg-[#0d1117] border-t border-gray-700 flex justify-end">
+				<div className="px-4 py-3 bg-bg-primary border-t border-border-color flex justify-end">
 					<button
 						type="button"
 						onClick={onClose}
-						className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-medium transition-colors"
+						className="px-3 py-1.5 bg-bg-secondary hover:bg-bg-primary text-text-secondary hover:text-text-primary border border-border-color rounded text-xs font-medium transition-colors"
 					>
 						Done
 					</button>
