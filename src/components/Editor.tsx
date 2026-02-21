@@ -1,6 +1,6 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import type { EditorSettings } from "./SettingsModal";
 
 interface EditorProps extends EditorSettings {
@@ -146,16 +146,19 @@ const Editor: React.FC<EditorProps> = ({
 	wordWrap,
 	theme,
 	fontFamily,
+	useTabs = false,
+	tabWidth = 2,
+	renderWhitespace = false,
 }) => {
 	const monacoRef = useRef<any>(null);
 
-	const getThemeName = (theme: string) => {
-		if (theme === "light") return "github-light";
-		if (theme === "dark") return "github-dark";
-		return theme;
-	};
+	const getThemeName = useCallback((t: string) => {
+		if (t === "light") return "github-light";
+		if (t === "dark") return "github-dark";
+		return t;
+	}, []);
 
-	const handleEditorDidMount: OnMount = (_editor, monaco) => {
+	const handleEditorDidMount = useCallback<OnMount>((_editor, monaco) => {
 		monacoRef.current = monaco;
 
 		monaco.editor.defineTheme("github-dark", {
@@ -216,13 +219,39 @@ const Editor: React.FC<EditorProps> = ({
 		});
 
 		monaco.editor.setTheme(getThemeName(theme));
-	};
+	}, [theme, getThemeName]);
 
 	useEffect(() => {
 		if (monacoRef.current) {
 			monacoRef.current.editor.setTheme(getThemeName(theme));
 		}
-	}, [theme]);
+	}, [theme, getThemeName]);
+
+	const options = useMemo(
+		() => ({
+			minimap: { enabled: minimap },
+			fontSize: fontSize,
+			lineNumbers: (lineNumbers ? "on" : "off") as "on" | "off",
+			wordWrap: (wordWrap ? "on" : "off") as "on" | "off",
+			scrollBeyondLastLine: false,
+			automaticLayout: true,
+			fontFamily:
+				fontFamily || "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+			renderWhitespace: (renderWhitespace ? "all" : "none") as "all" | "none",
+			insertSpaces: !useTabs,
+			tabSize: tabWidth,
+		}),
+		[
+			minimap,
+			fontSize,
+			lineNumbers,
+			wordWrap,
+			fontFamily,
+			renderWhitespace,
+			useTabs,
+			tabWidth,
+		],
+	);
 
 	return (
 		<div className="h-full w-full">
@@ -233,15 +262,7 @@ const Editor: React.FC<EditorProps> = ({
 				value={value}
 				onChange={onChange}
 				onMount={handleEditorDidMount}
-				options={{
-					minimap: { enabled: minimap },
-					fontSize: fontSize,
-					lineNumbers: lineNumbers ? "on" : "off",
-					wordWrap: wordWrap ? "on" : "off",
-					scrollBeyondLastLine: false,
-					automaticLayout: true,
-					fontFamily: fontFamily || "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-				}}
+				options={options}
 			/>
 		</div>
 	);
