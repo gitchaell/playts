@@ -1,4 +1,4 @@
-import { Code, Settings, Sun, Moon, Share2, Folder, X } from "lucide-react";
+import { Code, Settings, Sun, Moon, Share2, Folder, X, Wand2 } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -9,6 +9,9 @@ import Sidebar from "./Sidebar";
 import SettingsModal, { type EditorSettings } from "./SettingsModal";
 import ShareModal from "./ShareModal";
 import NewFileModal from "./NewFileModal";
+import prettier from "prettier/standalone";
+import parserTypescript from "prettier/plugins/typescript";
+import parserEstree from "prettier/plugins/estree";
 
 const DEFAULT_CODE = `// Welcome to PlayTS!
 // A simple TypeScript playground.
@@ -99,6 +102,9 @@ const Playground: React.FC = () => {
 			wordWrap: false,
 			editorTheme: "auto",
 			fontFamily: "'JetBrains Mono', monospace",
+			useTabs: false,
+			tabWidth: 2,
+			renderWhitespace: false,
 		},
 	);
 
@@ -183,12 +189,48 @@ const Playground: React.FC = () => {
 		};
 	}, [files, activeFile, runCode]);
 
-	const handleCodeChange = (newCode: string | undefined) => {
+	const handleCodeChange = useCallback((newCode: string | undefined) => {
 		setFiles((prev) => ({
 			...prev,
 			[activeFile]: newCode || "",
 		}));
-	};
+	}, [activeFile, setFiles]);
+
+	const handleRenameFile = useCallback((oldName: string, newName: string) => {
+		setFiles((prev) => {
+			if (!prev[oldName]) return prev;
+			if (prev[newName]) {
+				alert("File with this name already exists!");
+				return prev;
+			}
+			const newFiles = { ...prev };
+			newFiles[newName] = newFiles[oldName];
+			delete newFiles[oldName];
+			return newFiles;
+		});
+		if (activeFile === oldName) {
+			setActiveFile(newName);
+		}
+	}, [activeFile, setFiles]);
+
+	const handleFormat = useCallback(async () => {
+		const currentCode = files[activeFile];
+		if (!currentCode) return;
+		try {
+			const formatted = await prettier.format(currentCode, {
+				parser: "typescript",
+				plugins: [parserTypescript, parserEstree],
+				tabWidth: editorSettings.tabWidth ?? 2,
+				useTabs: editorSettings.useTabs ?? false,
+			});
+			setFiles((prev) => ({
+				...prev,
+				[activeFile]: formatted,
+			}));
+		} catch (e) {
+			console.error("Formatting failed", e);
+		}
+	}, [files, activeFile, editorSettings, setFiles]);
 
 	const handleShare = () => {
 		const hash = compress(JSON.stringify(files));
@@ -299,6 +341,14 @@ const Playground: React.FC = () => {
 				<div className="flex items-center space-x-2">
 					<button
 						type="button"
+						onClick={handleFormat}
+						className="p-1.5 text-text-secondary hover:text-text-primary transition-colors"
+						title="Format Code"
+					>
+						<Wand2 className="w-5 h-5" />
+					</button>
+					<button
+						type="button"
 						onClick={toggleTheme}
 						className="p-1.5 text-text-secondary hover:text-text-primary transition-colors"
 						title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
@@ -309,10 +359,11 @@ const Playground: React.FC = () => {
 					<button
 						type="button"
 						onClick={handleShare}
-						className="flex items-center space-x-1 px-3 py-1.5 bg-bg-primary hover:bg-bg-secondary text-text-primary rounded-md text-xs font-medium transition-colors border border-border-color shadow-sm"
+						className="p-1.5 text-text-secondary hover:text-text-primary transition-colors flex items-center gap-2"
+						title="Share"
 					>
-						<Share2 className="w-3 h-3" />
-						<span className="hidden sm:inline">Share</span>
+						<Share2 className="w-5 h-5" />
+						<span className="hidden sm:inline text-xs font-medium">Share</span>
 					</button>
 					<button
 						type="button"
@@ -340,6 +391,7 @@ const Playground: React.FC = () => {
 								onSelectFile={setActiveFile}
 								onAddFile={() => setIsNewFileOpen(true)}
 								onDeleteFile={handleDeleteFile}
+								onRenameFile={handleRenameFile}
 								isCollapsed={isSidebarCollapsed}
 								onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
 							/>
@@ -416,6 +468,7 @@ const Playground: React.FC = () => {
 							}}
 							onAddFile={() => setIsNewFileOpen(true)}
 							onDeleteFile={handleDeleteFile}
+							onRenameFile={handleRenameFile}
 							isCollapsed={false}
 							onToggle={() => {}}
 						/>

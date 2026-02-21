@@ -1,5 +1,5 @@
-import { File, FilePlus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import type React from "react";
+import { File, FilePlus, Trash2, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
 
 interface SidebarProps {
 	files: Record<string, string>;
@@ -7,6 +7,7 @@ interface SidebarProps {
 	onSelectFile: (filename: string) => void;
 	onAddFile: () => void;
 	onDeleteFile: (filename: string) => void;
+	onRenameFile: (oldName: string, newName: string) => void;
 	isCollapsed: boolean;
 	onToggle: () => void;
 }
@@ -17,9 +18,45 @@ const Sidebar: React.FC<SidebarProps> = ({
 	onSelectFile,
 	onAddFile,
 	onDeleteFile,
+	onRenameFile,
 	isCollapsed,
 	onToggle,
 }) => {
+	const [renamingFile, setRenamingFile] = useState<string | null>(null);
+	const [renameValue, setRenameValue] = useState("");
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (renamingFile && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [renamingFile]);
+
+	const handleStartRename = (filename: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		setRenamingFile(filename);
+		setRenameValue(filename);
+	};
+
+	const handleConfirmRename = () => {
+		if (renamingFile) {
+			if (renameValue.trim() && renameValue !== renamingFile) {
+				onRenameFile(renamingFile, renameValue.trim());
+			}
+			setRenamingFile(null);
+		}
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			handleConfirmRename();
+		} else if (e.key === "Escape") {
+			setRenamingFile(null);
+		}
+		e.stopPropagation();
+	};
+
 	return (
 		<div
 			className={`
@@ -58,9 +95,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 				{Object.keys(files).map((filename) => (
 					<div
 						key={filename}
-						onClick={() => onSelectFile(filename)}
+						onClick={() => !renamingFile && onSelectFile(filename)}
 						onKeyDown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
+							if (!renamingFile && (e.key === 'Enter' || e.key === ' ')) {
 								onSelectFile(filename);
 							}
 						}}
@@ -75,22 +112,49 @@ const Sidebar: React.FC<SidebarProps> = ({
             `}
 						title={isCollapsed ? filename : undefined}
 					>
-						<div className="flex items-center gap-2 overflow-hidden">
-							<File className="w-4 h-4 shrink-0" />
-							{!isCollapsed && <span className="truncate">{filename}</span>}
-						</div>
-						{!isCollapsed && filename !== "main.ts" && (
-							<button
-								type="button"
-								onClick={(e) => {
-									e.stopPropagation();
-									onDeleteFile(filename);
-								}}
-								className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-900/30 text-text-secondary hover:text-red-400 rounded transition-all"
-								title="Delete File"
-							>
-								<Trash2 className="w-3 h-3" />
-							</button>
+						{renamingFile === filename ? (
+							<div className="flex items-center gap-2 flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+								<File className="w-4 h-4 shrink-0" />
+								<input
+									ref={inputRef}
+									type="text"
+									value={renameValue}
+									onChange={(e) => setRenameValue(e.target.value)}
+									onBlur={handleConfirmRename}
+									onKeyDown={handleKeyDown}
+									className="bg-bg-primary text-text-primary text-xs px-1 py-0.5 rounded border border-accent-color outline-none w-full"
+								/>
+							</div>
+						) : (
+							<>
+								<div className="flex items-center gap-2 overflow-hidden">
+									<File className="w-4 h-4 shrink-0" />
+									{!isCollapsed && <span className="truncate">{filename}</span>}
+								</div>
+								{!isCollapsed && filename !== "main.ts" && (
+									<div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+										<button
+											type="button"
+											onClick={(e) => handleStartRename(filename, e)}
+											className="p-1 hover:bg-bg-primary text-text-secondary hover:text-text-primary rounded mr-1"
+											title="Rename File"
+										>
+											<Pencil className="w-3 h-3" />
+										</button>
+										<button
+											type="button"
+											onClick={(e) => {
+												e.stopPropagation();
+												onDeleteFile(filename);
+											}}
+											className="p-1 hover:bg-red-900/30 text-text-secondary hover:text-red-400 rounded"
+											title="Delete File"
+										>
+											<Trash2 className="w-3 h-3" />
+										</button>
+									</div>
+								)}
+							</>
 						)}
 					</div>
 				))}
