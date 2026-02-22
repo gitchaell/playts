@@ -7,16 +7,35 @@ import Playground from "../components/Playground";
 <html lang="en" class="dark">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233178c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='16 18 22 12 16 6'/%3E%3Cpolyline points='8 6 2 12 8 18'/%3E%3C/svg%3E" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
+
+		<!-- SEO -->
+		<title>PlayTS - TypeScript Playground & Editor</title>
+		<meta name="description" content="A modern, client-side TypeScript playground and editor with instant preview, mermaid diagrams, and sharing capabilities." />
+		<meta name="keywords" content="TypeScript, Playground, Editor, Astro, React, Online Compiler, Mermaid Diagrams" />
+		<link rel="canonical" href={Astro.url} />
+
+		<!-- Open Graph -->
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={Astro.url} />
+		<meta property="og:title" content="PlayTS - TypeScript Playground & Editor" />
+		<meta property="og:description" content="A modern, client-side TypeScript playground and editor with instant preview, mermaid diagrams, and sharing capabilities." />
+		<meta property="og:image" content="/favicon.svg" />
+
+		<!-- Twitter -->
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content="PlayTS - TypeScript Playground & Editor" />
+		<meta name="twitter:description" content="A modern, client-side TypeScript playground and editor with instant preview, mermaid diagrams, and sharing capabilities." />
+		<meta name="twitter:image" content="/favicon.svg" />
+
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=JetBrains+Mono:wght@100..800&family=Roboto+Mono:wght@100..700&family=Source+Code+Pro:wght@200..900&family=Ubuntu+Mono:wght@400;700&display=swap"
 			rel="stylesheet"
 		/>
-		<title>PlayTS</title>
 	</head>
 	<body class="bg-bg-primary text-text-primary overflow-hidden">
 		<Playground client:only="react" />
