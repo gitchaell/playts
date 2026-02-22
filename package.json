@@ -10,8 +10,11 @@
 	},
 	"dependencies": {
 		"@astrojs/react": "^4.4.2",
+		"@fontsource/inter": "^5.2.8",
 		"@monaco-editor/react": "^4.7.0",
+		"@resvg/resvg-js": "^2.6.2",
 		"@tailwindcss/vite": "^4.2.0",
+		"@vite-pwa/astro": "^1.2.0",
 		"astro": "^5.17.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.575.0",
@@ -20,8 +23,10 @@
 		"prettier": "^3.8.1",
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
+		"satori": "^0.19.2",
 		"tailwind-merge": "^3.5.0",
-		"tailwindcss": "^4.2.0"
+		"tailwindcss": "^4.2.0",
+		"workbox-window": "^7.4.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.3",
